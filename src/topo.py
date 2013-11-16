@@ -5,14 +5,25 @@ class nSwitch(Topo):
         Topo.__init__(self, **opts)
         self.senders = s
         self.receivers = r
+        switches = []
+        senders = []
+        receivers = []
+        # create switches
+        for i in range(n):
+            switches.append(self.addSwitch('s%s' % (i+1)))
 
-        for i in range(1,n+1):
-            switch = self.addSwitch('s%i' % i)
+        # create senders
+        for h in range(s):
+            senders.append(self.addHost('h%s' % (h+1)))
 
+        # create receivers
+        for h in range(r):
+            receivers.append(self.addHost('h%s' % (h+s+1)))
+
+        # connect all senders / receivers to all switches
+        for i in range (n):
             for h in range(s):
-                host = self.addHost('h%s' % (h+1))
-                self.addLink(host, switch)
-
-            for h in range(s, r+s):
-                host = self.addHost('h%s' % (h+1))
-                self.addLink(host, switch)
+                self.addLink(senders[h], switches[i])
+            for h in range(r):
+                self.addLink(receivers[h], switches[i])
+                
