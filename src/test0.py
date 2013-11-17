@@ -14,15 +14,16 @@ from mininet.node import OVSKernelSwitch as Switch
 from mininet.util import custom
 
 def test0(args):
-    topo = nSwitch(n=args.n)
+    topo = nSwitch(n=args.n, s=args.s, r=args.r)
     link = custom(TCLink, bw=args.bw)
     net = Mininet(topo=topo, switch=Switch, link=link)
     setup(args)
     net.start()
 
+    print net.pingAll()
     senders = net.hosts[:topo.senders]
     receivers = net.hosts[topo.senders:]
-    mkdirs(500, len(receivers))
+    mkdirs(args)
 
     for i in range(1,len(senders)+1):
         host = net.getNodeByName('h%i' % i)
@@ -41,55 +42,49 @@ def test0(args):
             host.cmdPrint('ifconfig h%i-eth%i 10.0.%i.%i netmask 255.255.255.0' %
                                 (i, j, j, i))
         
-    # h1 = net.getNodeByName('h1')
-    # h2 = net.getNodeByName('h2')
-    # h2.sendCmd('iperf -s -i 1')
-    # print h1.cmdPrint('ping -c 1 %s' % h2.IP())
-    # h1.sendCmd('iperf -c %s -t 2 -i 1' % h2.IP())
-    # progress(3)
-    # h1_out = h1.waitOutput()
-    # lg.info('sender:\n%s\n' % h1_out)
-    # time.sleep(0.1)
-    # h2_out = h2.read(10000)
-    # lg.info('receiver:\n%s\n' % h2_out)
-    # net.stop()
-    # end(args)
-    # exit(0)
     if args.debug:
-        routfiles = {h: '/tmp/r%s.out' % h.name for h in receivers}
-        rerrfiles = {h: '/tmp/r%s.out' % h.name for h in receivers}
-        [ h.cmd('echo >',routfiles[h]) for h in receivers ]
-        [ h.cmd('echo >',rerrfiles[h]) for h in receivers ]
-
-    for r in range(0,len(receivers)):
+        outfiles = {h: '/tmp/%s.out' % h.name for h in net.hosts}
+        errfiles = {h: '/tmp/%s.out' % h.name for h in net.hosts}
+        [ h.cmd('echo >',outfiles[h]) for h in net.hosts ]
+        [ h.cmd('echo >',errfiles[h]) for h in net.hosts ]
+        
+    for r in range(len(receivers)):
         if args.debug:
-            receivers[r].sendCmd('python receiver.py --id %d --cs %d --nr %d --ns %d --debug'
-                                 %(r, 500, len(receivers), len(senders)),
-                                 '>', routfiles[receivers[r]],
-                                 '2>', rerrfiles[receivers[r]],
-                                 '&')
+            receivers[r].sendCmd('python receiver.py --id %d --nr %d --ns %d --ds %s --debug'
+                                 %(r, len(receivers), len(senders), args.ds),
+                                 '>', outfiles[receivers[r]],
+                                 '2>', errfiles[receivers[r]])
         else:
-            receivers[r].sendCmd('python receiver.py --id %d --cs %d --nr %d --ns %d'
-                                 %(r, 500, len(receivers), len(senders)))
+            receivers[r].sendCmd('python receiver.py --id %d --nr %d --ns %d --ds %s'
+                                 %(r, len(receivers), len(senders), args.ds))
 
     ips = [ r.IP() for r in receivers ]
 
     time.sleep(1)
     for s in range(len(senders)):
-        senders[s].sendCmd('python sender.py --id %d --cs %d --rc %s' %
-                            (s, 500, ips))
+        if args.debug:
+            senders[s].sendCmd('python sender.py --id %d --ns %d --ips %s --ds %s --debug' %
+                               (s, len(senders), ips, args.ds),
+                               '>', outfiles[senders[s]],
+                               '2>', errfiles[senders[s]])
+        else:
+            senders[s].sendCmd('python sender.py --id %d --cs %d --ns %d --ips %s --ds %s' %
+                               (s, len(senders), ips, args.ds))
 
-
-    if args.debug:
-        for h, line in monitorFiles(routfiles, 50, timeout=500):
-            if h:
-                print('%s: %s' % (h.name, line))
+    # if args.debug:
+    #     for h, line in monitorFiles(outfiles, 50, timeout=500):
+    #         if h:
+    #             print('%s: %s' % (h.name, line))
             
     tts = {}
-    for s,r in zip(senders,receivers):
-        print r.waitOutput()
-        tts[s] = float(s.waitOutput().strip('\n'))
+    ttr = {}
+    for s in senders:
+        tts[s] = s.waitOutput()
+    for r in receivers:
+        ttr[r] = r.waitOutput()
+
     print tts
+    print ttr
     print 'here'
     net.stop()
 
@@ -101,10 +96,10 @@ def progress(t):
         time.sleep(1)
     print '\r\n'
 
-def mkdirs(chunkSize, numChunks):
+def mkdirs(args):
     try:
-        os.makedirs('../data/covtype/received/%d/%d' %
-                    (chunkSize, numChunks))
+        os.makedirs('../data/%s/received/%d/%d' %
+                    (args.ds, args.cs, args.r))
     except Exception, e:
         # print 'fail',e
         pass
@@ -119,6 +114,14 @@ def parse_args():
                         action="store",
                         help="Number of switches.  Must be >= 1",
                         default=1)
+    parser.add_argument('-s',
+                        action="store",
+                        help="Number of senders.  Must be >= 1",
+                        default=1)
+    parser.add_argument('-r',
+                        action="store",
+                        help="Number of receivers.  Must be >= 1",
+                        default=1)
     parser.add_argument('--mptcp',
                         action="store_true",
                         help="Enable MPTCP (net.mptcp.mptcp_enabled)",
@@ -127,6 +130,14 @@ def parse_args():
                         action="store",
                         help="Set # subflows (net.mptcp.mptcp_ndiffports)",
                         default=1)
+    parser.add_argument('--ds',
+                        action="store",
+                        help="Dataset to use.",
+                        default='covtype')
+    parser.add_argument('--cs',
+                        action="store",
+                        help="Size of chunks to be used for...something.",
+                        default=500)
     parser.add_argument('--debug',
                         action="store_true",
                         help="Turn on debugging",
@@ -134,6 +145,8 @@ def parse_args():
 
     args = parser.parse_args()
     args.n = int(args.n)
+    args.s = int(args.s)
+    args.r = int(args.r)
     return args
 
 def set_mptcp_enabled(enabled):

@@ -1,17 +1,9 @@
-import argparse, socket, threading, sys
+import argparse, socket, threading, sys, time
 
 bufs = []
 
 def receiver():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--id', action='store')
-    parser.add_argument('--cs', action='store')
-    parser.add_argument('--nr', action='store')
-    parser.add_argument('--ns', action='store')
-    parser.add_argument('--debug', action='store_true', default=False)
-
-    args = parser.parse_args()
-    print 'id: %s cs: %s nr: %s ns: %s' % (args.id, args.cs, args.nr, args.ns)
+    args = parse_args()
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -19,17 +11,43 @@ def receiver():
     PORT = 8000
     s.bind((HOST, PORT))
 
-    s.listen(1)
-    conn, addr = s.accept()
-    print 'connection: ', addr
-    t = threading.Thread(target=rcv_data, args=(conn, 0, args.debug))
-    t.start()
-    t.join()
-    conn.close()
+    s.listen(2)
+    seconds = 20
+    
+    connections, tid = 0, 0
+    thrds = []
+    conns = []
+    start = time.time()
 
+    while connections < args.ns and start + seconds > time.time():
+        sys.stdout.flush()
+        conn, addr = s.accept()
+        if connections == 0:
+            st = time.time()
+            
+        conns.append(conn)
+        connections += 1
+        
+        thrds.append(threading.Thread(target=rcv_data, args=(conns[-1], tid, args.debug)))
+        tid += 1
+        thrds[-1].start()
+
+    if start + seconds < time.time():
+        print '-1'
+        sys.stdout.flush()
+
+        map(lambda c: c.close(), conns)
+        return None
+
+    map(lambda t: t.join(), thrds)
+    
+    map(lambda c: c.close(), conns)
+    print time.time() - st
     writer(args)
+
     
 def rcv_data(conn, tid, debug):
+    sys.stdout.flush()
     global bufs
     bufs.append('')
 
@@ -38,19 +56,57 @@ def rcv_data(conn, tid, debug):
         data = conn.recv(65536)
         if not data: break
         if debug:
-            rcvd+=1
-            if rcvd % 5000 == 0:
-                print '%i lines received.' % rcvd
+            rcvd += len(data)
+            if rcvd >= 100000:
+                print '%i bytes received. from: %i' % (len(bufs[tid]), tid)
                 sys.stdout.flush()
+                rcvd = 0
         bufs[tid] += data
-        
+
 def writer(args):
-    fd = open('../data/covtype/received/%s/%s/chunk%s.csv' %
-             (args.cs, args.nr, args.id),'w')
+    fd = open('../data/%s/received/%i/%i/chunk%i.csv' %
+             (args.ds, args.cs, args.nr, args.id),'w')
     for i in range(len(bufs)):
         fd.write(bufs[i])
         
     fd.close()
-        
+
+def parse_args():
+    parser = argparse.ArgumentParser('Will receive data sent by the sender.')
+    parser.add_argument('--id',
+                        action='store',
+                        help='ID of this node.')
+    parser.add_argument('--cs',
+                        action='store',
+                        help='Chunk size used for...something.',
+                        default=500)
+    parser.add_argument('--nr',
+                        action='store',
+                        help='# of receivers to use. Must be >= 1.',
+                        default=1)
+    parser.add_argument('--ns',
+                        action='store',
+                        help='# of senders to use. Must be >= 1.',
+                        default=1)
+    parser.add_argument('--ds',
+                        action='store',
+                        help='Dataset to be used.',
+                        default='covtype')
+    parser.add_argument('--debug',
+                        action='store_true',
+                        help='Turns on debugging mode.',
+                        default=False)
+
+    args = parser.parse_args()
+    args.id = int(args.id)
+    args.cs = int(args.cs)
+    args.nr = int(args.nr)
+    args.ns = int(args.ns)
+
+    if args.debug:
+        print 'id: %s cs: %s nr: %s ns: %s' % (args.id, args.cs, args.nr, args.ns)
+        sys.stdout.flush()
+    return args
+
 if __name__ == '__main__':
     receiver()

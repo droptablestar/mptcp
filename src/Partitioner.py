@@ -35,7 +35,7 @@ class Partitioner:
                      (self.dname,self.chunkSize,self.numChunks,i),'w')
                 for i in xrange(self.numChunks) ]
 
-        with open('../datac/%s/train.csv' % self.dname,'r') as f:
+        with open('../data/%s/train.csv' % self.dname,'r') as f:
             lines = f.readlines()
         lines = map(lambda x: x.strip(' \n'), lines)
 
@@ -61,9 +61,8 @@ class Partitioner:
             os.makedirs('../data/%s/storage/%d/%d' %
                         (self.dname,self.chunkSize,self.numChunks))
         except:
-            print 'fail'
+            # print 'fail'
             pass
-                
         
     __makedirs = mkdirs
     __part = part
