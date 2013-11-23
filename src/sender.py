@@ -6,7 +6,6 @@ def main():
     rcvrs = len(args.ips)
     
     PORT = 8000
-    print args.ips
     st = time.time()
     sckts = []
     
@@ -15,22 +14,23 @@ def main():
         sckts[-1].connect((args.ips[i], PORT))
     
     with open('../data/%s/storage/%d/%s/chunk%i.csv' %
-              (args.ds, args.cs, args.ns, 0)) as f:
+              (args.ds, args.cs, args.ns, args.id)) as f:
         lines = f.readlines()
 
     start = 0
     done = False
     length = len(lines)
-
+    if args.debug: print start
     while not done:
         for i in range(len(args.ips)):
             end = start + args.cs
-            if args.debug:
-                print '%d\t%d' % (start, end)
-                sys.stdout.flush()
             if end >= length:
                 end = length
                 done = True
+            if args.debug:
+                print '%d sending %d-%d to %d' % \
+                    (args.id,start,end,(i+args.id)%len(args.ips))
+                sys.stdout.flush()
             sckts[(i+args.id)%len(args.ips)].sendall(''.join(lines[start:end]))
             if done: break
             start = end
@@ -38,8 +38,6 @@ def main():
     [ s.close() for s in sckts ]
 
     print time.time() - st
-    sys.stdout.flush()
-    # return None
 
 def parse_args():
     parser = argparse.ArgumentParser("Node which will send data.")

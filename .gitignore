@@ -1,2 +1,4 @@
 *.pyc
-data/*
+data/
+datacenter_mptcp/
+results/

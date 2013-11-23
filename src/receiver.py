@@ -1,4 +1,4 @@
-import argparse, socket, threading, sys, time
+import argparse, socket, threading, sys, time, os
 
 bufs = []
 
@@ -7,47 +7,42 @@ def receiver():
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    
     HOST = ''
     PORT = 8000
     s.bind((HOST, PORT))
 
     s.listen(2)
-    seconds = 20
+    seconds = 10
     
-    connections, tid = 0, 0
+    connections, tid, st = 0, 0, 0
     thrds = []
     conns = []
     start = time.time()
 
-    while connections < args.ns and start + seconds > time.time():
-        sys.stdout.flush()
-        conn, addr = s.accept()
-        if connections == 0:
-            st = time.time()
+    while connections < args.ns:
+        try:
+            conn, addr = s.accept()
+            if connections == 0:
+                st = time.time()
             
-        conns.append(conn)
-        connections += 1
-        
-        thrds.append(threading.Thread(target=rcv_data, args=(conns[-1], tid, args.debug)))
-        tid += 1
-        thrds[-1].start()
-
-    if start + seconds < time.time():
-        print '-1'
-        sys.stdout.flush()
-
-        map(lambda c: c.close(), conns)
-        return None
+            conns.append(conn)
+            connections += 1
+            thrds.append(threading.Thread(target=rcv_data, args=(conns[-1],
+                                                                 tid,
+                                                                 args.debug)))
+            tid += 1
+            thrds[-1].start()
+        except:
+            print 'receiver timed out!'
+            break
 
     map(lambda t: t.join(), thrds)
-    
     map(lambda c: c.close(), conns)
     print time.time() - st
     writer(args)
-
     
 def rcv_data(conn, tid, debug):
-    sys.stdout.flush()
     global bufs
     bufs.append('')
 
@@ -64,12 +59,21 @@ def rcv_data(conn, tid, debug):
         bufs[tid] += data
 
 def writer(args):
-    fd = open('../data/%s/received/%i/%i/chunk%i.csv' %
-             (args.ds, args.cs, args.nr, args.id),'w')
+    path = '../data/%s/received/%i/%i/' % (args.ds, args.cs, args.nr)
+        
+    if args.debug:
+        print map(lambda x: x.count('\n'), bufs)
+        sys.stdout.flush()
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    fd = open(path+'chunk%s.csv' % args.id, 'w')
     for i in range(len(bufs)):
         fd.write(bufs[i])
         
     fd.close()
+    return None
 
 def parse_args():
     parser = argparse.ArgumentParser('Will receive data sent by the sender.')
@@ -98,7 +102,6 @@ def parse_args():
                         default=False)
 
     args = parser.parse_args()
-    args.id = int(args.id)
     args.cs = int(args.cs)
     args.nr = int(args.nr)
     args.ns = int(args.ns)
