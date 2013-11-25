@@ -311,19 +311,29 @@ class FatTreeTopo(StructuredTopo):
         @param k switch degree
         @param speed bandwidth in Gbps
         '''
-        core = StructuredNodeSpec(0, k, None, speed, type_str = 'core')
+        # core = StructuredNodeSpec(0, k, None, speed, type_str = 'core')
+        core = StructuredNodeSpec(0, 2*k, None, speed, type_str = 'core')
         agg = StructuredNodeSpec(k / 2, k / 2, speed, speed, type_str = 'agg')
-        edge = StructuredNodeSpec(k / 2, k / 2, speed, speed,
-                                  type_str = 'edge')
-        host = StructuredNodeSpec(1, 0, speed, None, type_str = 'host')
+        # edge = StructuredNodeSpec(k / 2, k / 2, speed, speed, type_str = 'edge')
+        edge = StructuredNodeSpec(k / 2, k, speed, speed, type_str = 'edge')
+        # host = StructuredNodeSpec(2, 0, speed, None, type_str = 'host')
+        host = StructuredNodeSpec(k / 2, 0, speed, None, type_str = 'host')
         node_specs = [core, agg, edge, host]
-        edge_specs = [StructuredEdgeSpec(speed)] * 3
+        # edge_specs = [StructuredEdgeSpec(speed)] * 3
+        edge_specs = [StructuredEdgeSpec(speed)] * 5
         super(FatTreeTopo, self).__init__(node_specs, edge_specs)
 
         self.k = k
         self.id_gen = FatTreeTopo.FatTreeNodeID
         self.numPods = k
         self.aggPerPod = k / 2
+        self.aggPerPod = k 
+
+        pods = range(0, k)
+        core_sws = range(1, k / 2 + 1)
+        agg_sws = range(k / 2, k)
+        edge_sws = range(0, k / 2)
+        hosts = range(2, k / 2 + 2)
 
         pods = range(0, k)
         core_sws = range(1, k / 2 + 1)
@@ -338,20 +348,23 @@ class FatTreeTopo(StructuredTopo):
                 self.addSwitch(edge_id, **edge_opts)
 
                 for h in hosts:
-                    host_id = self.id_gen(p, e, h).name_str()
+                    host_id = self.id_gen(p, 0, h).name_str()
                     host_opts = self.def_nopts(self.LAYER_HOST, host_id)
                     self.addHost(host_id, **host_opts)
                     self.addLink(host_id, edge_id)
 
+                # for a in agg_sws:
                 for a in range(e*2, e*2+2):
+                    # agg_id = self.id_gen(p, a, 1).name_str()
                     agg_id = self.id_gen(p, agg_sws[a], 1).name_str()
                     agg_opts = self.def_nopts(self.LAYER_AGG, agg_id)
                     self.addSwitch(agg_id, **agg_opts)
                     self.addLink(edge_id, agg_id)
-
+                    
             for a in agg_sws:
                 agg_id = self.id_gen(p, a, 1).name_str()
-                c_index = a - k / 2 + 1
+                # c_index = a - k / 2 + 1
+                c_index = ((a - k / 2) % (k / 2)) + 1
                 for c in core_sws:
                     core_id = self.id_gen(k, c_index, c).name_str()
                     core_opts = self.def_nopts(self.LAYER_CORE, core_id)

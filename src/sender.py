@@ -1,14 +1,23 @@
 import argparse, socket, sys
 import time
 
+from subprocess import call
+
 def main():
     args = parse_args()
     rcvrs = len(args.ips)
-    
+
     PORT = 8000
     st = time.time()
     sckts = []
-    
+
+    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # s.connect((args.ips[0], PORT))
+    # s.send('hello')
+    # s.close()
+
+    # return
+
     for i in range(len(args.ips)):
         sckts.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         sckts[-1].connect((args.ips[i], PORT))
@@ -20,7 +29,7 @@ def main():
     start = 0
     done = False
     length = len(lines)
-    if args.debug: print start
+
     while not done:
         for i in range(len(args.ips)):
             end = start + args.cs
@@ -31,7 +40,9 @@ def main():
                 print '%d sending %d-%d to %d' % \
                     (args.id,start,end,(i+args.id)%len(args.ips))
                 sys.stdout.flush()
+                
             sckts[(i+args.id)%len(args.ips)].sendall(''.join(lines[start:end]))
+
             if done: break
             start = end
 

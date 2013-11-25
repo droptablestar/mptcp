@@ -1,5 +1,7 @@
 import argparse, socket, threading, sys, time, os
 
+from subprocess import call
+
 bufs = []
 
 def receiver():
@@ -13,16 +15,23 @@ def receiver():
     s.bind((HOST, PORT))
 
     s.listen(2)
-    seconds = 10
+
+    # conn,addr = s.accept()
+    # print conn,addr
+    # data = conn.recv(65536)
+    # print data
+    # conn.close()
+    # return
     
     connections, tid, st = 0, 0, 0
     thrds = []
     conns = []
     start = time.time()
-
     while connections < args.ns:
         try:
             conn, addr = s.accept()
+            print conn, addr
+            sys.stdout.flush()
             if connections == 0:
                 st = time.time()
             

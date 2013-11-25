@@ -59,6 +59,7 @@ def parse_args():
                         default=False)
 
     args = parser.parse_args()
+    args.bw = int(args.bw)
     args.sw = int(args.sw)
     args.ns = int(args.ns)
     args.nr = int(args.nr)
@@ -72,13 +73,16 @@ def main():
     time.sleep(1) # wait for controller to start
 
     topo = FatTreeTopo(K)
+    # topo = Test()
     link = custom(TCLink, bw=args.bw, max_queue_size=100)
+    # net = Mininet(topo=topo, link=link)
     net = Mininet(controller=RemoteController, topo=topo, link=link,
                   switch=OVSKernelSwitch)
     net.start()
 
     mappings = create_mappings(args, net)
-
+    time.sleep(3)
+    
     sndrs = mappings['s']
     rcvrs = mappings['r']
 
@@ -87,12 +91,19 @@ def main():
 
     enable_mptcp(args.nflows)
 
+    for s in sndrs:
+        for r in rcvrs:
+            s.cmdPrint('ping -c 1 %s' % r.IP())
+
+    # net.pingAll()
+    # return
+
     if args.debug:
         outfiles = {h: '/tmp/%s.out' % h.name for h in net.hosts}
         errfiles = {h: '/tmp/%s.out' % h.name for h in net.hosts}
         [ h.cmd('echo >',outfiles[h]) for h in net.hosts ]
         [ h.cmd('echo >',errfiles[h]) for h in net.hosts ]
-        
+
     for r in rcvrs:
         if args.debug:
             r.sendCmd('python receiver.py --id %s --nr %d --ns %d --ds %s --debug'
@@ -116,7 +127,7 @@ def main():
         else:
             s.sendCmd('python sender.py --id %s --cs %d --ns %d --ips %s --ds %s' %
                       (i, args.cs, args.ns, ips, args.ds))
-        
+
     tts = {}
     ttr = {}
     for s in sndrs:
@@ -131,7 +142,6 @@ def main():
     pox_c.kill()
     pox_c.wait()
     
-    # print 'here'
     net.stop()
 
     write_results(tts, ttr, args)
@@ -157,8 +167,8 @@ def create_mappings(args, net):
     s_hosts = filter(lambda x: search('[02468]_\d_\d',x.name), net.hosts)
     r_hosts = filter(lambda x: search('[13579]_\d_\d',x.name), net.hosts)
 
-    shuffle(s_hosts)
-    shuffle(r_hosts)
+    # shuffle(s_hosts)
+    # shuffle(r_hosts)
     
     mappings = {'s' : [], 'r' : []}
 
