@@ -312,8 +312,8 @@ class FatTreeTopo(StructuredTopo):
         '''
         core = StructuredNodeSpec(0, k, None, speed, type_str = 'core')
         agg = StructuredNodeSpec(k / 2, k / 2, speed, speed, type_str = 'agg')
-        edge = StructuredNodeSpec(k / 2, k, speed, speed, type_str = 'edge')
-        host = StructuredNodeSpec(k, 0, speed, None, type_str = 'host')
+        edge = StructuredNodeSpec(k / 2, k / 2, speed, speed, type_str = 'edge')
+        host = StructuredNodeSpec(1, 0, speed, None, type_str = 'host')
         node_specs = [core, agg, edge, host]
         edge_specs = [StructuredEdgeSpec(speed)] * 3
         super(FatTreeTopo, self).__init__(node_specs, edge_specs)
@@ -327,7 +327,7 @@ class FatTreeTopo(StructuredTopo):
         core_sws = range(1, k / 2 + 1)
         agg_sws = range(k / 2, k)
         edge_sws = range(0, k / 2)
-        hosts = range(2, k + 1)
+        hosts = range(2, k / 2 + 2)
 
         for p in pods:
             for e in edge_sws:
@@ -336,7 +336,7 @@ class FatTreeTopo(StructuredTopo):
                 self.addSwitch(edge_id, **edge_opts)
 
                 for h in hosts:
-                    host_id = self.id_gen(p, 0, h).name_str()
+                    host_id = self.id_gen(p, e, h).name_str()
                     host_opts = self.def_nopts(self.LAYER_HOST, host_id)
                     self.addHost(host_id, **host_opts)
                     self.addLink(host_id, edge_id)
@@ -359,7 +359,7 @@ class FatTreeTopo(StructuredTopo):
 
     def port(self, src, dst):
         '''Get port number (optional)
-
+        
         Note that the topological significance of DPIDs in FatTreeTopo enables
         this function to be implemented statelessly.
 
@@ -371,15 +371,16 @@ class FatTreeTopo(StructuredTopo):
         '''
         src_layer = self.layer(src)
         dst_layer = self.layer(dst)
-
+        
         src_id = self.id_gen(name = src)
         dst_id = self.id_gen(name = dst)
-
+        
         LAYER_CORE = 0
         LAYER_AGG = 1
         LAYER_EDGE = 2
         LAYER_HOST = 3
-
+        
+        # print '\n\nsrc: %s dst: %s\n' % (src, dst)
         if src_layer == LAYER_HOST and dst_layer == LAYER_EDGE:
             src_port = 0
             dst_port = (src_id.host - 2) * 2 + 1
@@ -413,6 +414,7 @@ class FatTreeTopo(StructuredTopo):
         if dst_layer != LAYER_HOST:
             dst_port += 1
 
+        # print 'src_port%s dst_port:%s' % (src_port, dst_port)
         return (src_port, dst_port)
 
 
@@ -485,7 +487,7 @@ class DualHomedTopo(StructuredTopo):
     def __init__(self, k = 4, speed = 1.0):
         core = StructuredNodeSpec(0, k, None, speed, type_str = 'core')
         agg = StructuredNodeSpec(1, k / 2, speed, speed, type_str = 'agg')
-        edge = StructuredNodeSpec(k / 2, k / 2, speed, speed, type_str = 'edge')
+        edge = StructuredNodeSpec(k / 2, 2, speed, speed, type_str = 'edge')
         host = StructuredNodeSpec(2, 0, speed, None, type_str = 'host')
         node_specs = [core, agg, edge, host]
         edge_specs = [StructuredEdgeSpec(speed)] * 3
@@ -494,7 +496,7 @@ class DualHomedTopo(StructuredTopo):
         self.k = k
         self.id_gen = DualHomedTopo.DualHomedNodeID
         self.numPods = k
-        self.aggPerPod = k / 2
+        self.aggPerPod = k
         
         pods = range(0, k)
         core_sws = range(0, k)
@@ -572,7 +574,7 @@ class DualHomedTopo(StructuredTopo):
             src_port = (dst_id.sw - self.k / 2) * 2
             dst_port = src_id.sw * 2 + 1
         elif src_layer == LAYER_AGG and dst_layer == LAYER_CORE:
-            src_port = (dst_id.host - 1) * 2
+            src_port = 0
             dst_port = src_id.pod
         elif src_layer == LAYER_CORE and dst_layer == LAYER_AGG:
             src_port = dst_id.pod
@@ -595,7 +597,7 @@ class DualHomedTopo(StructuredTopo):
         if dst_layer != LAYER_HOST:
             dst_port += 1
 
-        # print '%s : %s' % (src_port, dst_port)
+        # print 'src_port: %s dst_port: %s' % (src_port, dst_port)
         return (src_port, dst_port)
   
 topos = {'dht' : (lambda: DualHomedTopo()) }

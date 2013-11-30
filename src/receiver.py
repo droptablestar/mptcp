@@ -25,8 +25,9 @@ def receiver():
     # conn, addr = s.accept()
     # print 'accepted'
     # sys.stdout.flush()
-    # data = conn.recv(65536)
-    # print data
+    # for i in range(60):
+    #     data = conn.recv(65536)
+    #     print '%s: %i' % (data, i)
     # print time.time() - start
     # conn.close()
 
@@ -35,8 +36,7 @@ def receiver():
     while connections < args.ns:
         try:
             conn, addr = s.accept()
-            print 'accepted'
-            sys.stdout.flush()
+
             if connections == 0:
                 st = time.time()
             
@@ -62,8 +62,8 @@ def rcv_data(conn, tid, debug):
 
     rcvd = 0
     while 1:
-        data = conn.recv(256)
-        print 'received'
+        data = conn.recv(65536)
+
         if not data: break
         if debug:
             rcvd += len(data)

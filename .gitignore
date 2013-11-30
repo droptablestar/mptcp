@@ -2,3 +2,4 @@
 data/
 datacenter_mptcp/
 results/
+*out

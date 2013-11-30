@@ -72,10 +72,12 @@ def parse_args():
 def main():
     args = parse_args()
     pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=dht --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out", shell=True)
+    # pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=ft,4 --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out", shell=True)
     time.sleep(1) # wait for controller to start
 
+    # topo = FatTreeTopo(k=args.k)
     topo = DualHomedTopo(k=args.k)
-    link = custom(TCLink, bw=args.bw)
+    link = custom(TCLink, bw=args.bw, max_queue_size=100)
 
     net = Mininet(controller=RemoteController, topo=topo, link=link, switch=OVSKernelSwitch)
     net.start()
@@ -85,8 +87,8 @@ def main():
     sndrs = mappings['s']
     rcvrs = mappings['r']
 
-    # print 's:', sndrs
-    # print 'r:', rcvrs
+    print 's:', sndrs
+    print 'r:', rcvrs
 
     # time.sleep(3)
     enable_mptcp(args.nflows)
@@ -95,8 +97,22 @@ def main():
     # sndrs[0].cmdPrint('ping -c1 %s' % rcvrs[0].IP())
     # net.pingAll()
 
+    # seconds = 2
+    # rcvrs[0].sendCmd('iperf -s -i 1')
+
+    # cmd = 'iperf -c %s -t %d -i 1' % (rcvrs[0].IP(), seconds)
+    # sndrs[0].sendCmd(cmd)
+    # progress(seconds + 1)
+    # sndrs_out = sndrs[0].waitOutput()
+    # lg.info("client output:\n%s\n" % sndrs_out)
+    # time.sleep(0.1)  # hack to wait for iperf server output.
+    # out = rcvrs[0].read(10000)
+    # lg.info("server output: %s\n" % out)
+    
+    
     # pox_c.kill()
     # pox_c.wait()
+    # raise Exception(':(')
     # return
 
     if args.debug:
@@ -104,9 +120,6 @@ def main():
         errfiles = {h: '/tmp/%s.out' % h.name for h in sndrs + rcvrs}
         [ h.cmd('echo >',outfiles[h]) for h in sndrs + rcvrs ]
         [ h.cmd('echo >',errfiles[h]) for h in sndrs + rcvrs ]
-
-        print outfiles
-        print errfiles
 
     for r in rcvrs:
         if args.debug:
