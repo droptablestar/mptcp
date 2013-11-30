@@ -27,10 +27,6 @@ def parse_args():
                         action="store",
                         help="K for dual homed tree",
                         default=4)
-    parser.add_argument('-sw',
-                        action="store",
-                        help="Number of switches.  Must be >= 1",
-                        default=1)
     parser.add_argument('-ns',
                         action="store",
                         help="Number of senders.  Must be >= 1",
@@ -63,7 +59,6 @@ def parse_args():
     args = parser.parse_args()
     args.bw = int(args.bw)
     args.k = int(args.k)
-    args.sw = int(args.sw)
     args.ns = int(args.ns)
     args.nr = int(args.nr)
     args.nflows = int(args.nflows)
@@ -75,27 +70,23 @@ def main():
     # pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=ft,4 --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out", shell=True)
     time.sleep(1) # wait for controller to start
 
+    # topo = DualHomedTop()
     # topo = FatTreeTopo(k=args.k)
     topo = DualHomedTopo(k=args.k)
     link = custom(TCLink, bw=args.bw, max_queue_size=100)
 
+    # net = Mininet(topo=topo, link=link, switch=OVSKernelSwitch)
     net = Mininet(controller=RemoteController, topo=topo, link=link, switch=OVSKernelSwitch)
     net.start()
 
-    mappings = create_mappings(args, net)
-    
-    sndrs = mappings['s']
-    rcvrs = mappings['r']
 
-    print 's:', sndrs
-    print 'r:', rcvrs
-
-    # time.sleep(3)
     enable_mptcp(args.nflows)
     time.sleep(3)
 
-    # sndrs[0].cmdPrint('ping -c1 %s' % rcvrs[0].IP())
-    # net.pingAll()
+    set_ips(net)
+    # net.hosts[0].cmdPrint('ifconfig')
+    # net.hosts[1].cmdPrint('ifconfig')
+    # net.hosts[0].cmdPrint('ping -c1 %s' % net.hosts[1].IP())
 
     # seconds = 2
     # rcvrs[0].sendCmd('iperf -s -i 1')
@@ -110,10 +101,18 @@ def main():
     # lg.info("server output: %s\n" % out)
     
     
+    # net.pingAll()
     # pox_c.kill()
     # pox_c.wait()
-    # raise Exception(':(')
     # return
+
+    mappings = create_mappings(args, net)
+    
+    sndrs = mappings['s']
+    rcvrs = mappings['r']
+
+    print 's:', sndrs
+    print 'r:', rcvrs
 
     if args.debug:
         outfiles = {h: '/tmp/%s.out' % h.name for h in sndrs + rcvrs}
@@ -129,7 +128,7 @@ def main():
                       '2>', errfiles[r])
         else:
             r.sendCmd('python receiver.py --id %s --nr %i --ns %i --ds %s' 
-                      % (r, args.nr, args.ns, args.ds))
+                      % (r.name, args.nr, args.ns, args.ds))
 
     time.sleep(1) # let servers start up
 
@@ -158,7 +157,7 @@ def main():
     # kill pox controller
     pox_c.kill()
     pox_c.wait()
-    
+
     net.stop()
 
     write_results(tts, ttr, args)
@@ -168,11 +167,11 @@ def write_results(tts, ttr, args):
         os.makedirs('../results')
 
     if args.mptcp:
-        f = open('../results/bw%s_sw%i_ns%i_nr_%i_nf%i_%s_mptcp.csv' %
-                 (args.bw,args.sw,args.ns,args.nr,args.nflows,args.ds), 'w')
+        f = open('../results/bw%s__ns%i_nr_%i_nf%i_%s_mptcp.csv' %
+                 (args.bw,args.ns,args.nr,args.nflows,args.ds), 'w')
     else:
-        f = open('../results/bw%s_sw%i_ns%i_nr_%i_nf%i_%s.csv' %
-                 (args.bw,args.sw,args.ns,args.nr,args.nflows,args.ds), 'w')
+        f = open('../results/bw%s_ns%i_nr_%i_nf%i_%s.csv' %
+                 (args.bw,args.ns,args.nr,args.nflows,args.ds), 'w')
     f.write('%s\n%s\n' %
             (','.join(map(lambda x: x.strip('\n'), tts.values())),
              ','.join(map(lambda x: x.strip('\n'), ttr.values()))))
@@ -195,17 +194,21 @@ def create_mappings(args, net):
     for r in range(args.nr):
         mappings['r'].append(r_hosts[r])
 
-    mappings['s'] = [ net.hosts[0] ]
-    mappings['r'] = [ net.hosts[4] ]
     return mappings
-    
+
+def set_ips(net):
+    for h in net.hosts:
+        h.cmdPrint('ifconfig %s-eth1 %s netmask 255.255.255.0' % (h.name, h.IP()))
+
 if __name__ == '__main__':
     try:
         lg.setLogLevel('info')
         main()
+        print 'main'
+        os.system('cp /tmp/pox.out .')
     except:
         import traceback
+        os.system('cp /tmp/pox.out .')
         traceback.print_exc(file=sys.stdout)
         reset()
-        os.system('cp /tmp/pox.out .')
         os.system("killall python2.7; mn -c; killall controller")

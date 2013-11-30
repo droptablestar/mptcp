@@ -15,7 +15,7 @@ def receiver():
     PORT = 8000
     s.bind((HOST, PORT))
 
-    s.listen(2)
+    s.listen(5)
 
     connections, tid, st = 0, 0, 0
     thrds = []
@@ -53,6 +53,7 @@ def receiver():
 
     map(lambda t: t.join(), thrds)
     map(lambda c: c.close(), conns)
+
     print time.time() - st
     writer(args)
     

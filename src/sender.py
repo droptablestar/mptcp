@@ -23,6 +23,7 @@ def main():
 
     # return
 
+    print args.ips
     for i in range(len(args.ips)):
         sckts.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         sckts[-1].connect((args.ips[i], PORT))
@@ -51,7 +52,7 @@ def main():
             if done: break
             start = end
 
-    [ s.close() for s in sckts ]
+    map(lambda s: s.close(), sckts)
 
     print time.time() - st
 

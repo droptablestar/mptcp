@@ -173,49 +173,6 @@ class StructuredTopo(Topo):
         edges = [(name, n) for n in self.down_nodes(name)]
         return edges
 
-#    def draw(self, filename = None, edge_width = 1, node_size = 1,
-#             node_color = 'g', edge_color = 'b'):
-#        '''Generate image of RipL network.
-#
-#        @param filename filename w/ext to write; if None, show topo on screen
-#        @param edge_width edge width in pixels
-#        @param node_size node size in pixels
-#        @param node_color node color (ex 'b' , 'green', or '#0000ff')
-#        @param edge_color edge color
-#        '''
-#        import matplotlib.pyplot as plt
-#
-#        pos = {} # pos[vertex] = (x, y), where x, y in [0, 1]
-#        for layer in range(len(self.node_specs)):
-#            v_boxes = len(self.node_specs)
-#            height = 1 - ((layer + 0.5) / v_boxes)
-#
-#            layer_nodes = sorted(self.layer_nodes(layer, False))
-#            h_boxes = len(layer_nodes)
-#            for j, dpid in enumerate(layer_nodes):
-#                pos[dpid] = ((j + 0.5) / h_boxes, height)
-#
-#        fig = plt.figure(1)
-#        fig.clf()
-#        ax = fig.add_axes([0, 0, 1, 1], frameon = False)
-#
-#        draw_networkx_nodes(self.g, pos, ax = ax, node_size = node_size,
-#                               node_color = node_color, with_labels = False)
-#        # Work around networkx bug; does not handle color arrays properly
-#        for edge in self.edges(False):
-#            draw_networkx_edges(self.g, pos, [edge], ax = ax,
-#                                edge_color = edge_color, width = edge_width)
-#
-#        # Work around networkx modifying axis limits
-#        ax.set_xlim(0, 1.0)
-#        ax.set_ylim(0, 1.0)
-#        ax.set_axis_off()
-#
-#        if filename:
-#            plt.savefig(filename)
-#        else:
-#            plt.show()
-
 
 class FatTreeTopo(StructuredTopo):
     '''Three-layer homogeneous Fat Tree.
@@ -485,6 +442,9 @@ class DualHomedTopo(StructuredTopo):
         return d
 
     def __init__(self, k = 4, speed = 1.0):
+        '''DualHomedTopo
+        '''
+        
         core = StructuredNodeSpec(0, k, None, speed, type_str = 'core')
         agg = StructuredNodeSpec(1, k / 2, speed, speed, type_str = 'agg')
         edge = StructuredNodeSpec(k / 2, 2, speed, speed, type_str = 'edge')
@@ -503,6 +463,38 @@ class DualHomedTopo(StructuredTopo):
         agg_sws = range(k / 2, k)
         edge_sws = range(0, k)
         hosts = range(3, k / 2 + 3)
+
+
+        # edge_id = self.id_gen(0, 0, 1)
+
+        # edge_opts = self.def_nopts(self.LAYER_EDGE, edge_id.name_str())
+        # self.addSwitch('0_0_1', **edge_opts)
+        # host_id = self.id_gen(0, 0, 3)
+        # host_opts = self.def_nopts(self.LAYER_HOST, host_id.name_str())
+        # self.addHost('0_0_3', **host_opts)
+        # self.addLink('0_0_3', '0_0_1', 0, 2)
+
+        # edge_opts = self.def_nopts(self.LAYER_EDGE, edge_id.name_str())
+        # self.addSwitch(edge_id.name_str(), **edge_opts)
+        # host_opts = self.def_nopts(self.LAYER_HOST, '0_0_4')
+        # self.addHost('0_0_4', **host_opts)
+        # self.addLink('0_0_4', edge_id.name_str(), 0, 4)
+
+        # edge_id = self.id_gen(0, 0, 2)
+
+        # edge_opts = self.def_nopts(self.LAYER_EDGE, edge_id.name_str())
+        # self.addSwitch('0_0_2', **edge_opts)
+        # host_opts = self.def_nopts(self.LAYER_HOST, '0_0_3')
+        # self.addHost('0_0_3', **host_opts)
+        # self.addLink('0_0_3', '0_0_2', 1, 2)
+
+        # edge_opts = self.def_nopts(self.LAYER_EDGE, '0_0_2')
+        # self.addSwitch('0_0_2', **edge_opts)
+        # host_opts = self.def_nopts(self.LAYER_HOST, '0_0_4')
+        # self.addHost('0_0_4', **host_opts)
+        # self.addLink('0_0_4', '0_0_2', 1, 4)
+
+        # return 
 
         for p in pods:
             for e in edge_sws:
@@ -565,7 +557,7 @@ class DualHomedTopo(StructuredTopo):
         # print '\n\nsrc: %s dst: %s src_id.host: %s dst_id.host: %s' % \
         #     (src, dst, src_id.host, dst_id.host)
         if src_layer == LAYER_HOST and dst_layer == LAYER_EDGE:
-            src_port = 0
+            src_port = dst_id.host - 1
             dst_port = (src_id.host - 2) * 2 + 1
         elif src_layer == LAYER_EDGE and dst_layer == LAYER_CORE:
             src_port = (dst_id.sw - 2) * 2
@@ -587,7 +579,7 @@ class DualHomedTopo(StructuredTopo):
             dst_port = (src_id.sw - 2) * 2
         elif src_layer == LAYER_EDGE and dst_layer == LAYER_HOST:
             src_port = (dst_id.host - 3) * 2 + 1
-            dst_port = 0
+            dst_port = src_id.host - 1
         else:
             raise Exception("Could not find port leading to given dst switch")
 

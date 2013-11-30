@@ -33,34 +33,31 @@ class DualHomedTop(Topo):
     def __init__(self, k=4):
         Topo.__init__(self)
 
-        for e in range(1,3):
-            self.addSwitch('e%i' % e)
+        self.addSwitch('0_0_1')
+        self.addHost('0_0_3')
+        self.addLink('0_0_3', '0_0_1', 0, 0)
 
-            self.addHost('h%i' % 1)
-            self.addHost('h%i' % 2)
-            self.addHost('h%i' % 3)
-            self.addHost('h%i' % 4)
+        self.addSwitch('0_0_2')
+        self.addHost('0_0_3')
+        self.addLink('0_0_3', '0_0_2', 1, 0)
 
-            self.addLink('h%i' % 1, 'e%i' % e)
-            self.addLink('h%i' % 2, 'e%i' % e)
-            self.addLink('h%i' % 3, 'e%i' % e)
-            self.addLink('h%i' % 4, 'e%i' % e)
+        self.addSwitch('0_0_2')
+        self.addHost('0_0_4')
+        self.addLink('0_0_4', '0_0_2', 0, 1)
+
+        # self.addSwitch('e1')
+        # self.addHost('h1')
+        # self.addLink('h1','e1')
+        # self.addHost('h2')
+        # self.addLink('h2','e1')
+
+        # self.addSwitch('e2')
+        # self.addHost('h1')
+        # self.addLink('h1','e2')
+        # self.addHost('h2')
+        # self.addLink('h2','e2')
 
         
-        self.addSwitch('a%i' % 1)
-        self.addLink('e%i' % 1, 'a%i' % 1)
-        self.addLink('e%i' % 2, 'a%i' % 1)
 
-        # self.addSwitch('a%i' % 1)
-        # self.addSwitch('a%i' % 2)
-        # self.addLink('e%i' % 1, 'a%i' % 1)
-        # self.addLink('e%i' % 1, 'a%i' % 2)
-        # self.addLink('e%i' % 2, 'a%i' % 1)
-        # self.addLink('e%i' % 2, 'a%i' % 2)
-
-        # self.addLink('e%i' % 1, 'a%i' % 1)
-        # self.addLink('e%i' % 1, 'a%i' % 2)
-        # self.addLink('e%i' % 2, 'a%i' % 1)
-        # self.addLink('e%i' % 2, 'a%i' % 2)
 
 topos = { 'dht' : (lambda: DualHomedTop()) }
