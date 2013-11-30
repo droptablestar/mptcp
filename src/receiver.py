@@ -8,6 +8,7 @@ def receiver():
     args = parse_args()
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
     HOST = ''
@@ -16,21 +17,25 @@ def receiver():
 
     s.listen(2)
 
-    # conn,addr = s.accept()
-    # print conn,addr
-    # data = conn.recv(65536)
-    # print data
-    # conn.close()
-    # return
-    
     connections, tid, st = 0, 0, 0
     thrds = []
     conns = []
     start = time.time()
+
+    # conn, addr = s.accept()
+    # print 'accepted'
+    # sys.stdout.flush()
+    # data = conn.recv(65536)
+    # print data
+    # print time.time() - start
+    # conn.close()
+
+    # return
+
     while connections < args.ns:
         try:
             conn, addr = s.accept()
-            print conn, addr
+            print 'accepted'
             sys.stdout.flush()
             if connections == 0:
                 st = time.time()
@@ -57,7 +62,8 @@ def rcv_data(conn, tid, debug):
 
     rcvd = 0
     while 1:
-        data = conn.recv(65536)
+        data = conn.recv(256)
+        print 'received'
         if not data: break
         if debug:
             rcvd += len(data)

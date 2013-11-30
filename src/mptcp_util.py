@@ -50,3 +50,11 @@ def enable_mptcp(mptcp_subflows):
         set_ndiffports(mptcp_subflows)
     else:
         reset()
+
+def progress(t):
+    while t > 0:
+        print T.colored('  %3d seconds left  \r' % (t), 'cyan'),
+        t -= 1
+        sys.stdout.flush()
+        sleep(1)
+    print '\r\n'

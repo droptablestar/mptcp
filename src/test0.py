@@ -6,18 +6,16 @@ from re import search
 from random import choice, shuffle
 from subprocess import Popen, PIPE
 from monitor import monitorFiles
-from topo import nSwitch, Test
+from dht import DualHomedTop
 
-from mininet.log import lg
+from mininet.log import lg, setLogLevel
 from mininet.net import Mininet
 from mininet.link import TCLink
-from mininet.util import dumpNodeConnections
-from mininet.log import setLogLevel
+from mininet.util import dumpNodeConnections, custom
 from mininet.node import OVSKernelSwitch, RemoteController
-from mininet.util import custom
 
-from mptcp_util import enable_mptcp, reset
-from dctopo import FatTreeTopo
+from mptcp_util import enable_mptcp, reset, progress
+from dctopo import FatTreeTopo, DualHomedTopo
 
 def parse_args():
     parser = argparse.ArgumentParser(description="2-host n-switch test")
@@ -25,6 +23,10 @@ def parse_args():
                         action="store",
                         help="Bandwidth of links",
                         default=10)
+    parser.add_argument('-k',
+                        action="store",
+                        help="K for dual homed tree",
+                        default=4)
     parser.add_argument('-sw',
                         action="store",
                         help="Number of switches.  Must be >= 1",
@@ -60,6 +62,7 @@ def parse_args():
 
     args = parser.parse_args()
     args.bw = int(args.bw)
+    args.k = int(args.k)
     args.sw = int(args.sw)
     args.ns = int(args.ns)
     args.nr = int(args.nr)
@@ -67,42 +70,43 @@ def parse_args():
     return args
 
 def main():
-    K=4
     args = parse_args()
-    pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=ft,%s --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out" % K, shell=True)
+    pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=dht --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out", shell=True)
     time.sleep(1) # wait for controller to start
 
-    topo = FatTreeTopo(K)
-    # topo = Test()
-    link = custom(TCLink, bw=args.bw, max_queue_size=100)
-    # net = Mininet(topo=topo, link=link)
-    net = Mininet(controller=RemoteController, topo=topo, link=link,
-                  switch=OVSKernelSwitch)
+    topo = DualHomedTopo(k=args.k)
+    link = custom(TCLink, bw=args.bw)
+
+    net = Mininet(controller=RemoteController, topo=topo, link=link, switch=OVSKernelSwitch)
     net.start()
 
     mappings = create_mappings(args, net)
-    time.sleep(3)
     
     sndrs = mappings['s']
     rcvrs = mappings['r']
 
-    print 's:',map(lambda x: x.name, mappings['s'])
-    print 'r:',map(lambda x: x.name, mappings['r'])
+    # print 's:', sndrs
+    # print 'r:', rcvrs
 
+    # time.sleep(3)
     enable_mptcp(args.nflows)
+    time.sleep(3)
 
-    for s in sndrs:
-        for r in rcvrs:
-            s.cmdPrint('ping -c 1 %s' % r.IP())
-
+    # sndrs[0].cmdPrint('ping -c1 %s' % rcvrs[0].IP())
     # net.pingAll()
+
+    # pox_c.kill()
+    # pox_c.wait()
     # return
 
     if args.debug:
-        outfiles = {h: '/tmp/%s.out' % h.name for h in net.hosts}
-        errfiles = {h: '/tmp/%s.out' % h.name for h in net.hosts}
-        [ h.cmd('echo >',outfiles[h]) for h in net.hosts ]
-        [ h.cmd('echo >',errfiles[h]) for h in net.hosts ]
+        outfiles = {h: '/tmp/%s.out' % h.name for h in sndrs + rcvrs}
+        errfiles = {h: '/tmp/%s.out' % h.name for h in sndrs + rcvrs}
+        [ h.cmd('echo >',outfiles[h]) for h in sndrs + rcvrs ]
+        [ h.cmd('echo >',errfiles[h]) for h in sndrs + rcvrs ]
+
+        print outfiles
+        print errfiles
 
     for r in rcvrs:
         if args.debug:
@@ -164,8 +168,8 @@ def write_results(tts, ttr, args):
     
 
 def create_mappings(args, net):
-    s_hosts = filter(lambda x: search('[02468]_\d_\d',x.name), net.hosts)
-    r_hosts = filter(lambda x: search('[13579]_\d_\d',x.name), net.hosts)
+    s_hosts = filter(lambda x: search('10\.[02468]\.\d\.\d',x.IP()), net.hosts)
+    r_hosts = filter(lambda x: search('10\.[13579]\.\d\.\d',x.IP()), net.hosts)
 
     # shuffle(s_hosts)
     # shuffle(r_hosts)
@@ -178,6 +182,8 @@ def create_mappings(args, net):
     for r in range(args.nr):
         mappings['r'].append(r_hosts[r])
 
+    mappings['s'] = [ net.hosts[0] ]
+    mappings['r'] = [ net.hosts[4] ]
     return mappings
     
 if __name__ == '__main__':
@@ -186,6 +192,7 @@ if __name__ == '__main__':
         main()
     except:
         import traceback
-        reset()
         traceback.print_exc(file=sys.stdout)
-        os.system("killall python2.7; mn -c")
+        reset()
+        os.system('cp /tmp/pox.out .')
+        os.system("killall python2.7; mn -c; killall controller")

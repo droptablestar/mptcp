@@ -11,9 +11,13 @@ def main():
     st = time.time()
     sckts = []
 
-    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # s.connect((args.ips[0], PORT))
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
+    s.connect((args.ips[0], PORT))
+
+    # print 'connected'
     # s.send('hello')
+    # print 'sent'
     # s.close()
 
     # return
@@ -30,6 +34,7 @@ def main():
     done = False
     length = len(lines)
 
+    args.cs = 1
     while not done:
         for i in range(len(args.ips)):
             end = start + args.cs
@@ -40,8 +45,10 @@ def main():
                 print '%d sending %d-%d to %d' % \
                     (args.id,start,end,(i+args.id)%len(args.ips))
                 sys.stdout.flush()
-                
+
+            # sckts[(i+args.id)%len(args.ips)].send(''.join(lines[start:end]))
             sckts[(i+args.id)%len(args.ips)].sendall(''.join(lines[start:end]))
+            print 'sent'
 
             if done: break
             start = end
