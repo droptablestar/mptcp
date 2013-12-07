@@ -27,10 +27,8 @@ def receiver():
     # sys.stdout.flush()
     # for i in range(60):
     #     data = conn.recv(65536)
-    #     print '%s: %i' % (data, i)
     # print time.time() - start
     # conn.close()
-
     # return
 
     while connections < args.ns:

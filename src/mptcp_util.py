@@ -15,6 +15,8 @@ def sysctl_set(key, value):
     """Issue systcl for given param to given value and check for error."""
     p = Popen("sysctl -w %s=%s" % (key, value), shell=True, stdout=PIPE,
               stderr=PIPE)
+    p = Popen("sysctl -w %s=%s" % (key, value), shell=True, stdout=PIPE,
+              stderr=PIPE)
     # Output should be empty; otherwise, we have an issue.  
     stdout, stderr = p.communicate()
     stdout_expected = "%s = %s\n" % (key, value)
@@ -37,15 +39,32 @@ def set_ndiffports(ports):
     lg.info("setting MPTCP ndiffports to %s\n" % ports)
     sysctl_set("net.mptcp.mptcp_ndiffports", ports)
 
+
+def debug(onoff):
+    onoff = 1 if onoff else 0
+    lg.info("setting MPTCP debug to %s\n" % onoff)
+    p = Popen("sysctl -w net.mptcp.mptcp_debug=%s" % onoff, shell=True, stdout=PIPE,
+              stderr=PIPE)
+        # Output should be empty; otherwise, we have an issue.  
+    stdout, stderr = p.communicate()
+    stdout_expected = "net.mptcp.mptcp_debug = %s\n" % onoff
+    if stdout != stdout_expected:
+        raise Exception("Popen returned unexpected stdout: %s != %s" %
+                        (stdout, stdout_expected))
+    if stderr:
+        raise Exception("Popen returned unexpected stderr: %s" % stderr)
+
 ''' 
 Disables MPTCP and resets the number of ports to 1
 '''
 def reset():
     set_enabled(False)
+    debug(False)
     set_ndiffports(1)
 
 def enable_mptcp(mptcp_subflows):
     if mptcp_subflows > 1:
+        debug(True)
         set_enabled(True)
         set_ndiffports(mptcp_subflows)
     else:

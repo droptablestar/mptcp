@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import os, socket, thread, time, argparse, sys
+import os, socket, thread, time, argparse, sys, subprocess
 import termcolor as T
 
 from re import search
@@ -8,6 +8,7 @@ from subprocess import Popen, PIPE
 from monitor import monitorFiles
 from dht import DualHomedTop
 
+from mininet.node import Host
 from mininet.log import lg, setLogLevel
 from mininet.net import Mininet
 from mininet.link import TCLink
@@ -66,24 +67,37 @@ def parse_args():
 
 def main():
     args = parse_args()
-    pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=dht --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out", shell=True)
-    # pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=ft,4 --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out", shell=True)
+    # pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=dht --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out", shell=True)
+    pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=ft,%s --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out" % args.k, shell=True)
     time.sleep(1) # wait for controller to start
 
     # topo = DualHomedTop()
-    # topo = FatTreeTopo(k=args.k)
-    topo = DualHomedTopo(k=args.k)
+    topo = FatTreeTopo(k=args.k)
+    # topo = DualHomedTopo(k=args.k)
     link = custom(TCLink, bw=args.bw, max_queue_size=100)
 
     # net = Mininet(topo=topo, link=link, switch=OVSKernelSwitch)
-    net = Mininet(controller=RemoteController, topo=topo, link=link, switch=OVSKernelSwitch)
+    print '   Starting mininet...'
+    net = Mininet(controller=RemoteController, topo=topo, link=link,
+                  switch=OVSKernelSwitch, host=Host)
     net.start()
-
 
     enable_mptcp(args.nflows)
     time.sleep(3)
 
-    set_ips(net)
+    # set_ips(net, args.mptcp)
+    # net.hosts[0].cmdPrint('ping -c1 %s' % net.hosts[1].IP())
+    # for n in net.hosts:
+    #     n.cmdPrint('ifconfig')
+    # net.pingAll()
+    
+    # pox_c.kill()
+    # pox_c.wait()
+
+    # net.stop()
+    # reset()
+    # return
+    # exit()
     # net.hosts[0].cmdPrint('ifconfig')
     # net.hosts[1].cmdPrint('ifconfig')
     # net.hosts[0].cmdPrint('ping -c1 %s' % net.hosts[1].IP())
@@ -146,11 +160,15 @@ def main():
 
     tts = {}
     ttr = {}
+    p = subprocess.Popen(['./timer.py'])
     for s in sndrs:
         tts[s] = s.waitOutput()
     for r in rcvrs:
         ttr[r] = r.waitOutput()
 
+
+    p.kill()
+    # os.killpg(p.pid, signal.SIGTERM)
     print tts.values()
     print ttr.values()
 
@@ -159,7 +177,7 @@ def main():
     pox_c.wait()
 
     net.stop()
-
+    reset()
     write_results(tts, ttr, args)
 
 def write_results(tts, ttr, args):
@@ -167,7 +185,7 @@ def write_results(tts, ttr, args):
         os.makedirs('../results')
 
     if args.mptcp:
-        f = open('../results/bw%s__ns%i_nr_%i_nf%i_%s_mptcp.csv' %
+        f = open('../results/bw%s_ns%i_nr_%i_nf%i_%s_mptcp.csv' %
                  (args.bw,args.ns,args.nr,args.nflows,args.ds), 'w')
     else:
         f = open('../results/bw%s_ns%i_nr_%i_nf%i_%s.csv' %
@@ -180,11 +198,13 @@ def write_results(tts, ttr, args):
     
 
 def create_mappings(args, net):
-    s_hosts = filter(lambda x: search('10\.[02468]\.\d\.\d',x.IP()), net.hosts)
-    r_hosts = filter(lambda x: search('10\.[13579]\.\d\.\d',x.IP()), net.hosts)
+    # s_hosts = filter(lambda x: search('10\.[02468]\.\d\.\d',x.IP()), net.hosts)
+    # r_hosts = filter(lambda x: search('10\.[13579]\.\d\.\d',x.IP()), net.hosts)
+    s_hosts = net.hosts[:len(net.hosts) - args.k]
+    r_hosts = net.hosts[-args.k:]
 
-    # shuffle(s_hosts)
-    # shuffle(r_hosts)
+    shuffle(s_hosts)
+    shuffle(r_hosts)
     
     mappings = {'s' : [], 'r' : []}
 
@@ -194,21 +214,27 @@ def create_mappings(args, net):
     for r in range(args.nr):
         mappings['r'].append(r_hosts[r])
 
+    # mappings['s'] = [ net.hosts[0] ]
+    # mappings['r'] = [ net.hosts[1] ]
     return mappings
 
-def set_ips(net):
+def set_ips(net, mptcp):
+    tables = 1
     for h in net.hosts:
-        h.cmdPrint('ifconfig %s-eth1 %s netmask 255.255.255.0' % (h.name, h.IP()))
+        pod, sw, host = map(int, h.IP().split('.')[1:])
+        newIP = '10.%s.%s.%s' % (pod, sw, host + 2)
+        newMAC = '00:00:00:%02x:%02x:%02x' % (pod, sw, host + 2)
 
+        intfs = h.intfList()
+        h.setIP(newIP, intf=intfs[1])
+        h.setMAC(str(newMAC), intfs[1])
+        
 if __name__ == '__main__':
     try:
-        lg.setLogLevel('info')
+        # lg.setLogLevel('info')
         main()
-        print 'main'
-        os.system('cp /tmp/pox.out .')
     except:
         import traceback
-        os.system('cp /tmp/pox.out .')
         traceback.print_exc(file=sys.stdout)
         reset()
         os.system("killall python2.7; mn -c; killall controller")

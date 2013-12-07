@@ -436,8 +436,8 @@ class DualHomedTopo(StructuredTopo):
             id = self.id_gen(name = name)
             # For hosts only, set the IP
             if layer == self.LAYER_HOST:
-              d.update({'ip': id.ip_str()})
-              d.update({'mac': id.mac_str()})
+                d.update({'ip': id.ip_str()})
+                d.update({'mac': id.mac_str()})
             d.update({'dpid': "%016x" % id.dpid})
         return d
 
@@ -458,43 +458,11 @@ class DualHomedTopo(StructuredTopo):
         self.numPods = k
         self.aggPerPod = k
         
-        pods = range(0, k)
+        pods = range(0, 1)
         core_sws = range(0, k)
         agg_sws = range(k / 2, k)
         edge_sws = range(0, k)
         hosts = range(3, k / 2 + 3)
-
-
-        # edge_id = self.id_gen(0, 0, 1)
-
-        # edge_opts = self.def_nopts(self.LAYER_EDGE, edge_id.name_str())
-        # self.addSwitch('0_0_1', **edge_opts)
-        # host_id = self.id_gen(0, 0, 3)
-        # host_opts = self.def_nopts(self.LAYER_HOST, host_id.name_str())
-        # self.addHost('0_0_3', **host_opts)
-        # self.addLink('0_0_3', '0_0_1', 0, 2)
-
-        # edge_opts = self.def_nopts(self.LAYER_EDGE, edge_id.name_str())
-        # self.addSwitch(edge_id.name_str(), **edge_opts)
-        # host_opts = self.def_nopts(self.LAYER_HOST, '0_0_4')
-        # self.addHost('0_0_4', **host_opts)
-        # self.addLink('0_0_4', edge_id.name_str(), 0, 4)
-
-        # edge_id = self.id_gen(0, 0, 2)
-
-        # edge_opts = self.def_nopts(self.LAYER_EDGE, edge_id.name_str())
-        # self.addSwitch('0_0_2', **edge_opts)
-        # host_opts = self.def_nopts(self.LAYER_HOST, '0_0_3')
-        # self.addHost('0_0_3', **host_opts)
-        # self.addLink('0_0_3', '0_0_2', 1, 2)
-
-        # edge_opts = self.def_nopts(self.LAYER_EDGE, '0_0_2')
-        # self.addSwitch('0_0_2', **edge_opts)
-        # host_opts = self.def_nopts(self.LAYER_HOST, '0_0_4')
-        # self.addHost('0_0_4', **host_opts)
-        # self.addLink('0_0_4', '0_0_2', 1, 4)
-
-        # return 
 
         for p in pods:
             for e in edge_sws:
@@ -517,17 +485,17 @@ class DualHomedTopo(StructuredTopo):
                     agg_opts = self.def_nopts(self.LAYER_AGG, agg_id)
                     self.addSwitch(agg_id, **agg_opts)
                     self.addLink(edge_id, agg_id)
-                    # print "\t**%s -> %s" % (edge_id, agg_id)
+            #         # print "\t**%s -> %s" % (edge_id, agg_id)
 
-            for c in core_sws:
-                a_index = 1 if c < k / 2 else 2
-                agg_id = self.id_gen(p, (c % 2) + 2, a_index).name_str()
-                # print "**AGG_id** ", agg_id
+            # for c in core_sws:
+            #     a_index = 1 if c < k / 2 else 2
+            #     agg_id = self.id_gen(p, (c % 2) + 2, a_index).name_str()
+            #     # print "**AGG_id** ", agg_id
 
-                core_id = self.id_gen(k, a_index, (c % 2) + 1).name_str()
-                core_opts = self.def_nopts(self.LAYER_CORE, core_id)
-                self.addSwitch(core_id, **core_opts)
-                self.addLink(core_id, agg_id)
+            #     core_id = self.id_gen(k, a_index, (c % 2) + 1).name_str()
+            #     core_opts = self.def_nopts(self.LAYER_CORE, core_id)
+            #     self.addSwitch(core_id, **core_opts)
+            #     self.addLink(core_id, agg_id)
                 # print "\t**%s -> %s" % (core_id, agg_id)
                 
 
@@ -591,5 +559,3 @@ class DualHomedTopo(StructuredTopo):
 
         # print 'src_port: %s dst_port: %s' % (src_port, dst_port)
         return (src_port, dst_port)
-  
-topos = {'dht' : (lambda: DualHomedTopo()) }

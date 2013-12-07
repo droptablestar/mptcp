@@ -18,18 +18,20 @@ def main():
     # print 'connected'
     # for i in range(60):
     #     s.send('hello')
-    #     print 'sent, %i' % i
     # s.close()
 
     # return
 
-    print args.ips
+    # print args.ips
     for i in range(len(args.ips)):
         sckts.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         sckts[-1].connect((args.ips[i], PORT))
     
-    with open('../data/%s/storage/%d/%s/chunk%i.csv' %
-              (args.ds, args.cs, args.ns, args.id)) as f:
+    # with open('../data/%s/storage/%d/%s/chunk%i.csv' %
+    #           (args.ds, args.cs, args.ns, args.id)) as f:
+    #     lines = f.readlines()
+
+    with open('../data/%s/train%i.csv' % (args.ds, args.id)) as f:
         lines = f.readlines()
 
     start = 0
