@@ -71,12 +71,10 @@ def main():
     pox_c = Popen("exec ~/pox/pox.py --no-cli riplpox.riplpox --topo=ft,%s --routing=hashed --mode=reactive 1> /tmp/pox.out 2> /tmp/pox.out" % args.k, shell=True)
     time.sleep(1) # wait for controller to start
 
-    # topo = DualHomedTop()
     topo = FatTreeTopo(k=args.k)
     # topo = DualHomedTopo(k=args.k)
     link = custom(TCLink, bw=args.bw, max_queue_size=100)
 
-    # net = Mininet(topo=topo, link=link, switch=OVSKernelSwitch)
     print '   Starting mininet...'
     net = Mininet(controller=RemoteController, topo=topo, link=link,
                   switch=OVSKernelSwitch, host=Host)
@@ -84,41 +82,6 @@ def main():
 
     enable_mptcp(args.nflows)
     time.sleep(3)
-
-    # set_ips(net, args.mptcp)
-    # net.hosts[0].cmdPrint('ping -c1 %s' % net.hosts[1].IP())
-    # for n in net.hosts:
-    #     n.cmdPrint('ifconfig')
-    # net.pingAll()
-    
-    # pox_c.kill()
-    # pox_c.wait()
-
-    # net.stop()
-    # reset()
-    # return
-    # exit()
-    # net.hosts[0].cmdPrint('ifconfig')
-    # net.hosts[1].cmdPrint('ifconfig')
-    # net.hosts[0].cmdPrint('ping -c1 %s' % net.hosts[1].IP())
-
-    # seconds = 2
-    # rcvrs[0].sendCmd('iperf -s -i 1')
-
-    # cmd = 'iperf -c %s -t %d -i 1' % (rcvrs[0].IP(), seconds)
-    # sndrs[0].sendCmd(cmd)
-    # progress(seconds + 1)
-    # sndrs_out = sndrs[0].waitOutput()
-    # lg.info("client output:\n%s\n" % sndrs_out)
-    # time.sleep(0.1)  # hack to wait for iperf server output.
-    # out = rcvrs[0].read(10000)
-    # lg.info("server output: %s\n" % out)
-    
-    
-    # net.pingAll()
-    # pox_c.kill()
-    # pox_c.wait()
-    # return
 
     mappings = create_mappings(args, net)
     
@@ -168,15 +131,17 @@ def main():
 
 
     p.kill()
-    # os.killpg(p.pid, signal.SIGTERM)
+
     print tts.values()
     print ttr.values()
+    
+    net.stop()
 
     # kill pox controller
     pox_c.kill()
     pox_c.wait()
 
-    net.stop()
+    #net.stop()
     reset()
     write_results(tts, ttr, args)
 
@@ -185,10 +150,10 @@ def write_results(tts, ttr, args):
         os.makedirs('../results')
 
     if args.mptcp:
-        f = open('../results/bw%s_ns%i_nr_%i_nf%i_%s_mptcp.csv' %
+        f = open('../results/bw%s_ns%i_nr_%i_nf%i_%s.csv' %
                  (args.bw,args.ns,args.nr,args.nflows,args.ds), 'w')
     else:
-        f = open('../results/bw%s_ns%i_nr_%i_nf%i_%s.csv' %
+        f = open('../results/bw%s_ns%i_nr_%i_nf%i_%s_tcp.csv' %
                  (args.bw,args.ns,args.nr,args.nflows,args.ds), 'w')
     f.write('%s\n%s\n' %
             (','.join(map(lambda x: x.strip('\n'), tts.values())),
@@ -198,10 +163,8 @@ def write_results(tts, ttr, args):
     
 
 def create_mappings(args, net):
-    # s_hosts = filter(lambda x: search('10\.[02468]\.\d\.\d',x.IP()), net.hosts)
-    # r_hosts = filter(lambda x: search('10\.[13579]\.\d\.\d',x.IP()), net.hosts)
-    s_hosts = net.hosts[:len(net.hosts) - args.k]
-    r_hosts = net.hosts[-args.k:]
+    s_hosts = filter(lambda x: search('10\.[02468]\.\d\.\d',x.IP()), net.hosts)
+    r_hosts = filter(lambda x: search('10\.[13579]\.\d\.\d',x.IP()), net.hosts)
 
     shuffle(s_hosts)
     shuffle(r_hosts)
@@ -214,8 +177,6 @@ def create_mappings(args, net):
     for r in range(args.nr):
         mappings['r'].append(r_hosts[r])
 
-    # mappings['s'] = [ net.hosts[0] ]
-    # mappings['r'] = [ net.hosts[1] ]
     return mappings
 
 def set_ips(net, mptcp):

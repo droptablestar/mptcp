@@ -1,18 +1,15 @@
 #!/bin/bash
 
-for (( k=4; k<9; k+=2 ))
+for (( s=1; s<8; s++ ))
 do
-    for (( i=1; i<13; i++ ))
+    for (( r=1; r<8; r++ ))
     do
-	for (( j=1; j<5; j++ ))
-	do
-	    echo "Testing k=$k s=$i r=$j TCP..."
-	    sudo ./test0.py -k=$k -ns $i -nr $j
-	    for (( m=2; m<9; m++ ))
-	    do 
-		echo "Testing k=$k s=$i r=$j MPTCP flows=$m..."
-		sudo ./test0.py -k=$k -ns $i -nr $j -nflows $m 
-	    done
-	done
-    done
-done
+        echo "Testing s=$s r=$r TCP..."
+        sudo ./test0.py -ns $s -nr $r
+        for (( f=2; f<7; f++ ))
+        do
+            echo "Testing s=$s r=$r MPTCP flows=$f..."
+            sudo ./test0.py -ns $s -nr $r -nflows $f --mptcp
+        done
+    done 
+done  
