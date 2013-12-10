@@ -1,9 +1,9 @@
 mptcp
 =====
-To get things up and running the first time is to clone the project:
-git clone https://github.com/jreeseue/mptcp.git
-git submodule init
-git submodule update
+To get things up and running the first time is to clone the project: <br/>
+git clone https://github.com/jreeseue/mptcp.git <br/>
+git submodule init <br/>
+git submodule update <br/><br/>
 
 From here mptcp will need to be setup inside of Mininet. To do this first
 follow the instructions from http://github.com/bocon13/mptcp_setup. The code
