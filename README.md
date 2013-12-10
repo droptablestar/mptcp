@@ -38,5 +38,4 @@ If more switches are desired this can be accomplished with the -n argument. For
 sudo ./test_switch.py -n 3
 ```
 
-
 Enjoy.
