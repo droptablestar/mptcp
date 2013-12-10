@@ -1,7 +1,5 @@
 *.pyc
-data/
-datacenter_mptcp/
-results/
 *out
-mptcp_setup/
-src1/
+data/small
+results/
+plots/

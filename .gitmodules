@@ -1,0 +1,3 @@
+[submodule "mptcp_setup"]
+	path = mptcp_setup
+	url = git://github.com/bocon13/mptcp_setup.git

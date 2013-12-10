@@ -15,7 +15,25 @@ from mininet.topo import Topo
 
 PORT_BASE = 1  # starting index for OpenFlow switch ports
 
+class TwoHostNInterfaceTopo(Topo):
+    "Two hosts connected by N interfaces"
 
+    def __init__(self, n, **opts):
+        "n is the number of interfaces connecting the hosts."
+        super(TwoHostNInterfaceTopo, self).__init__(**opts)
+
+        # Note: switches are not strictly necessary, but they do give
+        # visibility into traffic from the root namespace.
+        SWITCHES = ['s%i' % i for i in range(1, n + 1)]
+        for sw in SWITCHES:
+            self.addSwitch(sw)
+
+        HOSTS = ['h1', 'h2']
+        for h in HOSTS:
+            self.addHost(h)
+            for sw in SWITCHES:
+                self.addLink(h, sw)
+                 
 class NodeID(object):
     '''Topo node identifier.'''
 
