@@ -1,8 +1,8 @@
 #!/bin/bash
 
-for (( s=1; s<8; s++ ))
+for (( s=1; s<9; s++ ))
 do
-    for (( r=1; r<8; r++ ))
+    for (( r=1; r<9; r++ ))
     do
         echo "Testing s=$s r=$r TCP..."
         sudo ./test_ft.py -ns $s -nr $r
