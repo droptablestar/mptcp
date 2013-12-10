@@ -32,5 +32,11 @@ The N-switch tests can be run with:
 ```
 sudo ./test_switch.py
 ```
+If more switches are desired this can be accomplished with the -n argument. For
+3 switches use:
+```
+sudo ./test_switch.py -n 3
+```
+
 
 Enjoy.
