@@ -37,5 +37,15 @@ If more switches are desired this can be accomplished with the -n argument. For
 ```
 sudo ./test_switch.py -n 3
 ```
+To run the entire set of tests for the Fat Tree use:
+```
+sudo ./run_test.sh
+```
+This takes an extreme amount of time and will almost certainly crash at some
+point.
+To run the entire set of tests for the N-switch use:
+```
+sudo ./run_switch.sh
+```
 
 Enjoy.
