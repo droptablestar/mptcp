@@ -23,7 +23,7 @@ from mptcp_util import enable_mptcp, reset, progress
 from dctopo import FatTreeTopo, DualHomedTopo
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="2-host n-switch test")
+    parser = argparse.ArgumentParser(description="Fat Tree Topology")
     parser.add_argument('-bw',
                         action="store",
                         help="Bandwidth of links",
@@ -117,13 +117,13 @@ def main():
 
     for s,i in zip(sndrs,range(len(sndrs))):
         if args.debug:
-            s.sendCmd('python sender.py --id %s --cs %d --ns %d --ips %s --ds %s --debug' 
-                      % (i, args.cs, args.ns, ips, args.ds),
+            s.sendCmd('python sender.py --id %s --cs %d --ips %s --ds %s --debug' 
+                      % (i, args.cs, ips, args.ds),
                       '1>', outfiles[s],
                       '2>', errfiles[s])
         else:
-            s.sendCmd('python sender.py --id %s --cs %d --ns %d --ips %s --ds %s' %
-                      (i, args.cs, args.ns, ips, args.ds))
+            s.sendCmd('python sender.py --id %s --cs %d --ips %s --ds %s' %
+                      (i, args.cs, ips, args.ds))
 
     tts = {}
     ttr = {}

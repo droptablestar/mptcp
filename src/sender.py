@@ -57,10 +57,6 @@ def parse_args():
                         action='store',
                         help='Chunk size used for something...',
                         default=500)
-    parser.add_argument('--ns',
-                        action='store',
-                        help='# of senders to be used. Must be >=1.',
-                        default=1)
     parser.add_argument('--ds',
                         action='store',
                         help='Dataset to use for distribution.',
@@ -76,8 +72,6 @@ def parse_args():
     args = parser.parse_args()
     args.id = int(args.id)
     args.cs = int(args.cs)
-    args.ns = int(args.ns)
-
     args.ips = [ i.strip(',][ ') for i in args.ips ]
 
     if args.debug:

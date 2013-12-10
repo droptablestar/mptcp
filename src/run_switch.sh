@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # number of switches
-for (( i=2; i<3; i++ ))
+for (( i=2; i<6; i++ ))
 do
     # number of tests per switch
     for (( j=0; j<2; j++))
