@@ -1,6 +1,6 @@
 mptcp
 =====
-To get things up and running the first time is to clone the project:
+To get things up and running first clone the repository:
 ```
 git clone https://github.com/jreeseue/mptcp.git 
 git submodule init 
