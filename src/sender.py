@@ -1,5 +1,8 @@
-import argparse, socket, sys
-import time
+"""This script emulates a node which sends data to a number of receivers. Each
+sender will open a unique copy of the data and send it divided evenly amongst
+all the receivers (passed in as an array of IPs to send to).
+"""
+import argparse, socket, sys, time
 
 from subprocess import call
 
@@ -14,23 +17,10 @@ def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
 
-    # s.connect((args.ips[0], PORT))
-    # print 'connected'
-    # for i in range(60):
-    #     s.send('hello')
-    # s.close()
-
-    # return
-
-    # print args.ips
     for i in range(len(args.ips)):
         sckts.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         sckts[-1].connect((args.ips[i], PORT))
     
-    # with open('../data/%s/storage/%d/%s/chunk%i.csv' %
-    #           (args.ds, args.cs, args.ns, args.id)) as f:
-    #     lines = f.readlines()
-
     with open('../data/%s/train%i.csv' % (args.ds, args.id)) as f:
         lines = f.readlines()
 

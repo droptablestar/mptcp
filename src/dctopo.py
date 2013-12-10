@@ -391,7 +391,11 @@ class FatTreeTopo(StructuredTopo):
 
         # print 'src_port%s dst_port:%s' % (src_port, dst_port)
         return (src_port, dst_port)
-
+"""
+This is the Dual Homed Tree topology we created. In it's current state it
+doesn't work inside of Mininet but could be fixed and used for futher
+testing.
+"""
 
 class DualHomedTopo(StructuredTopo):
     LAYER_CORE = 0

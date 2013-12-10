@@ -1,5 +1,7 @@
 *.pyc
 *out
 data/small
+data/covtype/received
+data/covtype/train[0-9]*
 results/
 plots/

@@ -1,3 +1,9 @@
+"""This script emulates a node which receives data from a number of senders.
+Each receiver will listen for connections and create a new thread for each
+connection received which will continue to accept data until the sender has
+tranmitted all its data. It will then write all the data from all the senders
+to a file.
+"""
 import argparse, socket, threading, sys, time, os
 
 from subprocess import call
@@ -21,15 +27,6 @@ def receiver():
     thrds = []
     conns = []
     start = time.time()
-
-    # conn, addr = s.accept()
-    # print 'accepted'
-    # sys.stdout.flush()
-    # for i in range(60):
-    #     data = conn.recv(65536)
-    # print time.time() - start
-    # conn.close()
-    # return
 
     while connections < args.ns:
         try:
@@ -120,9 +117,6 @@ def parse_args():
     args.nr = int(args.nr)
     args.ns = int(args.ns)
 
-    if args.debug:
-        print 'id: %s cs: %s nr: %s ns: %s' % (args.id, args.cs, args.nr, args.ns)
-        sys.stdout.flush()
     return args
 
 if __name__ == '__main__':

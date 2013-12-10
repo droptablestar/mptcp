@@ -1,12 +1,16 @@
 #!/usr/bin/python
+"""This is our main test script. It takes various parameters such as the
+number of senders and receivers to use, the number of flows to use (if MPTCP
+is desired), k (size of the Fat Tree), bandwidth of the links. From here
+it called sender.py and receiver.py to simulate a transfer.
+"""
+
 import os, socket, thread, time, argparse, sys, subprocess
 import termcolor as T
 
 from re import search
 from random import choice, shuffle
 from subprocess import Popen, PIPE
-from monitor import monitorFiles
-from dht import DualHomedTop
 
 from mininet.node import Host
 from mininet.log import lg, setLogLevel
@@ -75,7 +79,7 @@ def main():
     # topo = DualHomedTopo(k=args.k)
     link = custom(TCLink, bw=args.bw, max_queue_size=100)
 
-    print '   Starting mininet...'
+    print 'Starting mininet...'
     net = Mininet(controller=RemoteController, topo=topo, link=link,
                   switch=OVSKernelSwitch, host=Host)
     net.start()
@@ -88,8 +92,8 @@ def main():
     sndrs = mappings['s']
     rcvrs = mappings['r']
 
-    print 's:', sndrs
-    print 'r:', rcvrs
+    # print 's:', sndrs
+    # print 'r:', rcvrs
 
     if args.debug:
         outfiles = {h: '/tmp/%s.out' % h.name for h in sndrs + rcvrs}
@@ -128,7 +132,6 @@ def main():
         tts[s] = s.waitOutput()
     for r in rcvrs:
         ttr[r] = r.waitOutput()
-
 
     p.kill()
 
@@ -179,17 +182,6 @@ def create_mappings(args, net):
 
     return mappings
 
-def set_ips(net, mptcp):
-    tables = 1
-    for h in net.hosts:
-        pod, sw, host = map(int, h.IP().split('.')[1:])
-        newIP = '10.%s.%s.%s' % (pod, sw, host + 2)
-        newMAC = '00:00:00:%02x:%02x:%02x' % (pod, sw, host + 2)
-
-        intfs = h.intfList()
-        h.setIP(newIP, intf=intfs[1])
-        h.setMAC(str(newMAC), intfs[1])
-        
 if __name__ == '__main__':
     try:
         # lg.setLogLevel('info')
