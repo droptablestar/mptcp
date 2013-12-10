@@ -14,12 +14,23 @@ project. Lastly, create copies of the test files with:
 ./createFiles.sh
 ```
 At this point tests can be run from the src/ directory. To run the Fat Tree
-tests use:
+test with 1 sender and 1 receiver use:
 ```
 sudo ./test_ft.py
 ```
+If more senders or receivers are desired this can be accomplished with the
+-ns and -nr arguments. For 2 senders and 3 receivers use:
+```
+sudo ./test_ft.py -ns 2 -nr 3
+```
+If MPTCP is desired this can be accomplished with the -nflows argument. For
+2 flows, 2 senders and 3 receivers use:
+```
+sudo ./test_ft.py -ns 2 -nr 3 -nflows 2
+```
 The N-switch tests can be run with:
 ```
-sudo ./test_switch.py. <br/><br/>
+sudo ./test_switch.py
 ```
+
 Enjoy.
