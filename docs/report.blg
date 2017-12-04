@@ -1,0 +1,79 @@
+This is BibTeX, Version 0.99d (TeX Live 2011)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: report.aux
+The style file: plain.bst
+Database file #1: report.bib
+I was expecting an "="---line 48 of file report.bib
+ : @Comment 
+ :          title={Data Mining: Practical Machine Learning Tools and Techniques},
+I'm skipping whatever remains of this entry
+I was expecting an "="---line 54 of file report.bib
+ : @Comment 
+ :          author={M. Turk, A. Pentland},
+I'm skipping whatever remains of this entry
+I was expecting an "="---line 62 of file report.bib
+ : @Comment 
+ :          author={H. Moon, P.J. Phillips},
+I'm skipping whatever remains of this entry
+I was expecting an "="---line 69 of file report.bib
+ : @Comment 
+ :          author={M.S. Bartlett, J.R. Movellan, T.J. Sejnowski},
+I'm skipping whatever remains of this entry
+I was expecting an "="---line 77 of file report.bib
+ : @Comment 
+ :          author={J. Lu, K.N. Plataniotis, A.N. Venetsanopoulos},
+I'm skipping whatever remains of this entry
+I was expecting an "="---line 85 of file report.bib
+ : @Comment 
+ :          author={L. Wiskott, J.-M. Fellous, N. Krueuger, C. von der Malsburg},
+I'm skipping whatever remains of this entry
+I was expecting an "="---line 93 of file report.bib
+ : @Comment 
+ :          author={G. Guo, S.Z. Li, K. Chan},
+I'm skipping whatever remains of this entry
+I was expecting an "="---line 98 of file report.bib
+ : @Comment 
+ :          author={A.V. Nefian, M.H. Hayes III},
+I'm skipping whatever remains of this entry
+You've used 4 entries,
+            2118 wiz_defined-function locations,
+            519 strings with 4715 characters,
+and the built_in function-call counts, 1354 in all, are:
+= -- 132
+> -- 65
+< -- 1
++ -- 27
+- -- 22
+* -- 88
+:= -- 223
+add.period$ -- 11
+call.type$ -- 4
+change.case$ -- 21
+chr.to.int$ -- 0
+cite$ -- 4
+duplicate$ -- 48
+empty$ -- 109
+format.name$ -- 22
+if$ -- 288
+int.to.chr$ -- 0
+int.to.str$ -- 4
+missing$ -- 2
+newline$ -- 21
+num.names$ -- 8
+pop$ -- 31
+preamble$ -- 1
+purify$ -- 19
+quote$ -- 0
+skip$ -- 41
+stack$ -- 0
+substring$ -- 72
+swap$ -- 13
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 16
+warning$ -- 0
+while$ -- 13
+width$ -- 5
+write$ -- 42
+(There were 8 error messages)

@@ -1,0 +1,26 @@
+\begin{thebibliography}{1}
+
+\bibitem{scalable}
+Mohammad Al-Fares, Alexander Loukissas, and Amin Vahdat.
+\newblock A scalable, commodity data center network architecture.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 38(4):63--74, August 2008.
+
+\bibitem{dht}
+Costin Raiciu.
+\newblock
+  \url{http://changeofelia.info.ucl.ac.be/pmwiki/uploads/SummerSchool/Program/session_010.pdf}.
+
+\bibitem{mptcp}
+Costin Raiciu, Sebastien Barre, Christopher Pluntke, Adam Greenhalgh, Damon
+  Wischik, and Mark Handley.
+\newblock Improving datacenter performance and robustness with multipath tcp.
+\newblock In {\em Proceedings of the ACM SIGCOMM 2011 Conference}, SIGCOMM '11,
+  pages 266--277, New York, NY, USA, 2011. ACM.
+
+\bibitem{datacenter}
+Brian~O'Connor Ryan~Wilson.
+\newblock
+  \url{http://reproducingnetworkresearch.wordpress.com/2013/03/13/cs244-13-improving-datacenter-performance-and-robustness-with-multipath-tcp/},
+  2013.
+
+\end{thebibliography}
